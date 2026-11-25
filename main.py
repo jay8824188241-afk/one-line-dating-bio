@@ -27,6 +27,8 @@ def self_check(bio: str) -> None:
         raise ValueError(f"bio is {len(bio)} chars, must be {MIN_CHARS}-{MAX_CHARS}")
     if not bio.strip():
         raise ValueError("bio must not be all whitespace")
+    if bio != bio.strip():
+        raise ValueError("bio must not start or end with whitespace")
     if "\n" in bio or "\r" in bio:
         raise ValueError("bio must be a single line")
 
@@ -37,6 +39,12 @@ def main() -> int:
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     with open(out_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(BIO)
+    # Round-trip check: what was written must be exactly the checked bio.
+    with open(out_path, "r", encoding="utf-8", newline="") as f:
+        written = f.read()
+    if written != BIO:
+        raise ValueError("round-trip mismatch: entry.txt does not match the bio")
+    self_check(written)
     digest = hashlib.sha256(BIO.encode("utf-8")).hexdigest()
     print(f"bio ({len(BIO)} chars): {BIO}")
     print(f"wrote {out_path}")
